@@ -1,0 +1,101 @@
+---
+title: "Child Poverty in Cardiff"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(RODBC)
+library(sf)
+library(plotly)
+library(geogrid)
+library(crosstalk)
+library(RColorBrewer)
+
+# Token needed to generate map for plot_mapbox
+Sys.setenv('MAPBOX_TOKEN' = 'pk.eyJ1IjoibWFya2phbWVzIiwiYSI6ImNqZnd5bDYwOTB2ZmgycWtkaDU2YjVmcHIifQ.ZTnEUDw7gvbawpO1p2m0Sg')
+
+# 
+load("C:\\Users\\mrmar\\Desktop\\R Projects\\Child_Poverty_Hex_Map\\Input\\all_data.RData")
+
+# Set num to factors
+shapeData_merge$Dep_Q <- factor(shapeData_merge$Dep_Q)
+shapeHex_merge$Dep_Q <- factor(shapeHex_merge$Dep_Q)
+PHW_LSOA_data$Dep_Q <- factor(PHW_LSOA_data$Dep_Q)
+
+# Order by value, add new column called orderRank then insert row number based on order
+PHW_LSOA_data <- arrange(PHW_LSOA_data, PHW_LSOA_data$`Area value`) %>% 
+  mutate(orderRank = 1:nrow(PHW_LSOA_data))
+
+# Set up SharedData group to enable crosstalk
+shape_sf_sd <- SharedData$new(shapeData_merge,key = ~lsoa11cd, group = "lsoa_select")
+shape_hex_sd <- SharedData$new(shapeHex_merge,key = ~lso11cd, group = "lsoa_select")
+plot_sd <- SharedData$new(PHW_LSOA_data,key = ~LSOA, group = "lsoa_select")
+
+```
+
+Column {data-width=900}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r}
+
+bscols(
+ plot_mapbox(
+   shape_sf_sd,
+   split = ~Dep_Q,
+   color = ~Dep_Q,
+   colors = 'RdYlBu',
+   alpah = 1,
+   showlegend = F,
+   text = ~paste(lsoa11nm,
+                "\n", shapeData_merge$LSOA.Name..Eng.,
+                "\n Dep Q =",Dep_Q),
+  hoverinfo = "text") %>% 
+   highlight(
+     on = "plotly_hover",
+     debounce = 1000,
+     color = 'black'
+     ),  
+ plot_ly(plot_sd) %>%
+    add_bars(
+     x= ~PHW_LSOA_data$orderRank,
+     y= ~PHW_LSOA_data$`Area value`,
+     width = 2,
+     split = ~Dep_Q,
+     color = ~Dep_Q,
+     colors = 'RdYlBu',
+     text = ~paste(LSOA,
+                         "\n", PHW_LSOA_data$`LSOA Name (Eng)`,
+                         "\n Dep Q =",PHW_LSOA_data$Dep_Q)) %>%
+    layout(title = '% in Child Poverty',
+          xaxis = list(title = FALSE, showticklabels = FALSE),
+          yaxis = list(title = 'Percentage %')
+          ),
+ plot_mapbox(
+   shape_hex_sd,
+   split = ~Dep_Q,
+   color = ~Dep_Q,
+   colors = 'RdYlBu',
+   alpah = 1,
+   showlegend = F,
+   text = ~paste(lso11nm,
+              "\n", shapeHex_merge$LSOAN.E,
+              "\n Dep Q =",Dep_Q),
+   hoverinfo = "text") %>%
+   highlight(
+     on = "plotly_hover",
+     debounce = 1000,
+    color = 'black'
+   )
+)
+
+```
+
+
+
+
