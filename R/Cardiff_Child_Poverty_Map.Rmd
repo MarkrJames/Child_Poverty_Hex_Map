@@ -22,9 +22,7 @@ library(RColorBrewer)
 # Token needed to generate map for plot_mapbox
 Sys.setenv('MAPBOX_TOKEN' = 'pk.eyJ1IjoibWFya2phbWVzIiwiYSI6ImNqZnd5bDYwOTB2ZmgycWtkaDU2YjVmcHIifQ.ZTnEUDw7gvbawpO1p2m0Sg')
 
-# 
-#load("C:\\Users\\mrmar\\Desktop\\R Projects\\Child_Poverty_Hex_Mapold\\Input\\all_data.RData")
-
+# Load tidy data
 load("..\\Input\\all_data.RData")
 
 # Set num to factors
